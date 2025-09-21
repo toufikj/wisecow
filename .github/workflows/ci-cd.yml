@@ -1,0 +1,75 @@
+name: CI/CD - build & deploy
+
+on:
+  workflow_dispatch: 
+  # push:
+  #   branches: [ "main" ]
+
+env:
+  IMAGE_NAME: 376572378342.dkr.ecr.ap-south-1.amazonaws.com/wisecow
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: "ap-south-1"
+
+      - name: Log in to Amazon ECR
+        id: ecr-login
+        uses: aws-actions/amazon-ecr-login@v1
+        
+      - name: Build and Push to ECR
+        id: build-push
+        uses: docker/build-push-action@v5.1.0
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: |
+            ${{ env.IMAGE_NAME }}:${{ github.run_number }}
+            ${{ env.IMAGE_NAME }}:latest
+
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Setup kubectl
+      uses: azure/setup-kubectl@v3
+      with:
+        version: 'v1.27.3' # choose appropriate version
+
+    - name: Restore Kubeconfig
+      run: |
+        echo "${{ secrets.KUBECONFIG }}" > $HOME/.kube/config
+        chmod 600 $HOME/.kube/config
+
+    - name: Update k8s manifests image
+      run: |
+        sed -i "s|${{ env.IMAGE_NAME }}:latest|${{ env.IMAGE_NAME }}:${{ github.run_number }}|g" k8s/deployment.yaml
+
+    - name: Apply k8s manifests
+      run: |
+        kubectl apply -f k8s/deployment.yaml
+        kubectl apply -f k8s/service.yaml
+        kubectl apply -f k8s/ingress.yaml
