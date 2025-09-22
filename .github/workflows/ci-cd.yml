@@ -71,4 +71,4 @@ jobs:
 
     - name: Apply k8s manifests
       run: |
-        kubectl apply -f k8s/deployment.yaml
+        kubectl --kubeconfig=/home/toufik/.kube/config apply -f k8s/deployment.yaml
