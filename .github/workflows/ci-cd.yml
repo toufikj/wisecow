@@ -64,10 +64,11 @@ jobs:
       run: |
         sed -i "s|${{ env.IMAGE_NAME }}:latest|${{ env.IMAGE_NAME }}:${{ github.run_number }}|g" k8s/deployment.yaml
 
-    - name: Deploy to Kubernetes
-      uses: actions-hub/kubectl@master
-      env:
-        KUBE_CONFIG: ${{ secrets.KUBECONFIG }}
+    - name: Configure Kubeconfig
+      uses: azure/k8s-set-context@v4
       with:
-        args: |
-          apply -f k8s/deployment.yaml
+        method: kubeconfig
+        kubeconfig: ${{ secrets.KUBECONFIG }}
+          
+    - name: Apply
+      run: kubectl apply -f k8s/deployment.yaml
