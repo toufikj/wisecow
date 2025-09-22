@@ -62,7 +62,7 @@ jobs:
     - name: Restore Kubeconfig
       run: |
         mkdir -p $HOME/.kube
-        echo "${{ secrets.KUBECONFIG }}" | base64 -d > $HOME/.kube/config
+        echo "${{ secrets.KUBECONFIG }}" | base64 --decode > $HOME/.kube/config
         chmod 600 $HOME/.kube/config
 
     - name: Update k8s manifests image
