@@ -54,21 +54,20 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v4
 
-    - name: Setup kubectl
-      uses: azure/setup-kubectl@v3
-      with:
-        version: 'v1.27.3' # choose appropriate version
-
-    - name: Restore Kubeconfig
-      run: |
-        mkdir -p $HOME/.kube
-        echo "${{ secrets.KUBECONFIG }}" | base64 --decode > $HOME/.kube/config
-        chmod 600 $HOME/.kube/config
+    # - name: Restore Kubeconfig
+    #   run: |
+    #     mkdir -p $HOME/.kube
+    #     echo "${{ secrets.KUBECONFIG }}" | base64 --decode > $HOME/.kube/config
+    #     chmod 600 $HOME/.kube/config
 
     - name: Update k8s manifests image
       run: |
         sed -i "s|${{ env.IMAGE_NAME }}:latest|${{ env.IMAGE_NAME }}:${{ github.run_number }}|g" k8s/deployment.yaml
 
-    - name: Apply k8s manifests
-      run: |
-        kubectl apply -f k8s/deployment.yaml
+    - name: Deploy to Kubernetes
+      uses: actions-hub/kubectl@master
+      env:
+        KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
+      with:
+        args: |
+          apply -f k8s/deployment.yaml
