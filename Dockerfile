@@ -1,25 +1,15 @@
-# Dockerfile - Wisecow (simple shell webserver)
-FROM debian:12-slim
+FROM debian:stable-slim
+RUN apt-get update && apt-get install -y \
+    cowsay \
+    fortune-mod \
+    netcat-openbsd \
+    bash \
+ && rm -rf /var/lib/apt/lists/*
 
-# install runtime dependencies: netcat (nc) used to implement simple web server, cowsay & fortune
-RUN apt-get update && \
-    DEBIAN_FRONTEND=noninteractive apt-get install -y \
-      netcat-openbsd \
-      fortune-mod \
-      cowsay \
-    && rm -rf /var/lib/apt/lists/*
+ENV PATH="/usr/games:${PATH}"
 
 WORKDIR /app
-
-# Copy the shell app and give execute permission
 COPY wisecow.sh /app/wisecow.sh
 RUN chmod +x /app/wisecow.sh
+CMD ["/app/wisecow.sh"]
 
-# default port the script uses
-EXPOSE 4499
-
-# run it as non-root user for better security
-RUN useradd -m -u 1000 appuser
-USER appuser
-
-ENTRYPOINT ["/app/wisecow.sh"]

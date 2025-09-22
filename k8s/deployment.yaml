@@ -27,3 +27,6 @@ spec:
           requests:
             cpu: "50m"
             memory: "64Mi"
+      imagePullSecrets:
+      - name: ecr-creds
+
