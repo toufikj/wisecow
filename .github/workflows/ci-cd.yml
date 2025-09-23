@@ -54,27 +54,11 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v4
 
-    # - name: Restore Kubeconfig
-    #   run: |
-    #     mkdir -p $HOME/.kube
-    #     echo "${{ secrets.KUBECONFIG }}" | base64 --decode > $HOME/.kube/config
-    #     chmod 600 $HOME/.kube/config
-
-    - name: Update k8s manifests image
+    - name: Add SSH Key
+      uses: webfactory/ssh-agent@v0.9.0
+      with:
+        ssh-private-key: ${{ secrets.EC2_SSH_KEY }}
+    - name: Apply K8s Manifests via SSH
       run: |
-        sed -i "s|${{ env.IMAGE_NAME }}:latest|${{ env.IMAGE_NAME }}:${{ github.run_number }}|g" k8s/deployment.yaml
-
-    - name: Install and configure kubectl
-      run: |
-        VERSION=$(curl --silent https://storage.googleapis.com/kubernetes-release/release/stable.txt)
-        curl https://storage.googleapis.com/kubernetes-release/release/$VERSION/bin/linux/amd64/kubectl \
-          --progress-bar \
-          --location \
-          --remote-name
-        chmod +x kubectl
-        sudo mv kubectl /usr/local/bin/
-        echo ${{ secrets.KUBECONFIG }} | base64 --decode > kubeconfig.yaml
-    - name: Apply
-      run: |
-        cat ./k8s/deployment.yaml
-        kubectl apply -f k8s/deployment.yaml
+        ssh -o StrictHostKeyChecking=no ubuntu@13.232.76.210 "kubectl apply -f ~/wisecow/k8s/deployment.yaml --kubeconfig ~/.kube/config"
+    
