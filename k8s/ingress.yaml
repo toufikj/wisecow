@@ -3,8 +3,7 @@ kind: Ingress
 metadata:
   name: wisecow-ingress
   annotations:
-    # alb.ingress.kubernetes.io/scheme: internet-facing
-    alb.ingress.kubernetes.io/scheme: internal
+    alb.ingress.kubernetes.io/scheme: internet-facing
     alb.ingress.kubernetes.io/target-type: ip
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
     alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:ap-south-1:376572378342:certificate/15a4911f-d959-41d3-b1fa-76cc41e8e696
