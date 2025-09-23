@@ -60,5 +60,5 @@ jobs:
         ssh-private-key: ${{ secrets.EC2_SSH_KEY }}
     - name: Apply K8s Manifests via SSH
       run: |
-        ssh -o StrictHostKeyChecking=no ubuntu@13.232.76.210 "kubectl apply -f ~/wisecow/k8s/deployment.yaml --kubeconfig ~/.kube/config"
+        ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.EC2_IP }} "kubectl apply -f ~/wisecow/k8s/deployment.yaml --kubeconfig ~/.kube/config"
     
